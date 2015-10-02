@@ -5,6 +5,8 @@
 
 #pragma comment(lib, "GLAux.lib")
 
+GLfloat bombXCoord = 0.0;
+GLfloat bombYCoord = 0.0;
 
 void LoadTextures()
 {
@@ -40,7 +42,7 @@ void LoadTextures()
 
 void ChangeSize(int w, int h) 
 {
-	if(h == 0)	
+	if(h == 0)
 		h = 1;
 	float ratio = 1.0* w / h;
 	glMatrixMode(GL_PROJECTION);
@@ -244,16 +246,16 @@ void DrawBuilding()
 	glColor3f(0.65, 0.65, 1);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	glBegin(GL_QUAD_STRIP);
-		glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y,					 BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH, BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y,					 BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH, BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y,					 BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y + BUILD_Y_LENGTH,	 BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y,					 BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y + BUILD_Y_LENGTH,	 BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y,					 BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH, BUILD_START_Z - BUILD_Z_LENGTH / 2);
+		glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
+		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
+		glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,		BUILD_START_Z + BUILD_Z_LENGTH / 2);
+		glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y,		BUILD_START_Z + BUILD_Z_LENGTH / 2);
+		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
+		glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
+		glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
+		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
 	glEnd();
 #pragma endregion
 	
@@ -319,35 +321,43 @@ void DrawBuilding()
 
 }
 
-void DrawBomb()
+void BombState()
+{
+	bombXCoord = bombStartX + BOMB_CORPUS_LENGTH / 2 + shift;
+	bombYCoord = PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY;	
+
+	if (bombXCoord > BUILD_LEFT_XCOORD	&& 
+		bombXCoord < BUILD_RIGHT_XCOORD	&&
+		bombYCoord < BUILD_HIGH_YCOORD  ||
+		bombYCoord < BUILD_START_Z)
+	{
+		bombYCoord > BUILD_START_Z ? buildExplosion = true : terraExplosion = true;
+		bombRunning = false;
+	}
+}
+
+void Bomb()
 {
 #pragma region Corpus
 	glColor3f(1.0, 1.0, 1.0);
 	glBegin(GL_QUAD_STRIP);
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
-
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
-
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
-
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
-
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
-
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
-
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
-
-		glVertex3f(bombStartX + shift,					PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
 		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);	
 	glEnd();
 #pragma endregion
@@ -367,7 +377,18 @@ void DrawBomb()
 	glEnd();
 #pragma endregion
 
+	BombState();
 	bombShiftY += BOMB_FALLING_SPEED;
+}
+
+void TerrainExplosion()
+{
+	
+}
+
+void BuildExplosion()
+{
+	
 }
 
 void Camera()
@@ -415,9 +436,11 @@ void RenderScene(void)
 	DrawTerrain();
 	DrawPlain();
 	DrawBuilding();
-	if (bombRunning)
-		DrawBomb();
-		
+
+	if (bombRunning)	Bomb();
+	if (terraExplosion)	TerrainExplosion();
+	if (buildExplosion) BuildExplosion();
+
     glutSwapBuffers();
 }
 
