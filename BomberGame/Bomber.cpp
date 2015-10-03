@@ -1,12 +1,14 @@
+#include <iostream>
 #include "Common\glut.h"
 #include "Common\GLAux.h"
 #include "defines.h"
-#include <iostream>
+#include "Particles.h"
 
 #pragma comment(lib, "GLAux.lib")
 
-GLfloat bombXCoord = 0.0;
-GLfloat bombYCoord = 0.0;
+
+Particles explosion(0);
+
 
 void LoadTextures()
 {
@@ -42,9 +44,8 @@ void LoadTextures()
 
 void ChangeSize(int w, int h) 
 {
-	if(h == 0)
-		h = 1;
-	float ratio = 1.0* w / h;
+	if(h == 0)	h = 1;
+	float ratio = 1.0 * w / h;
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glViewport(0, 0, w, h);
@@ -333,6 +334,7 @@ void BombState()
 	{
 		bombYCoord > BUILD_START_Z ? buildExplosion = true : terraExplosion = true;
 		bombRunning = false;
+		bombExplose = true;
 	}
 }
 
@@ -381,14 +383,9 @@ void Bomb()
 	bombShiftY += BOMB_FALLING_SPEED;
 }
 
-void TerrainExplosion()
+void Destroy()
 {
-	
-}
-
-void BuildExplosion()
-{
-	
+	explosion.Explosion(0.1, 0.1, 1.0, 1.0, 1.0, bombXCoord, bombYCoord);
 }
 
 void Camera()
@@ -438,8 +435,7 @@ void RenderScene(void)
 	DrawBuilding();
 
 	if (bombRunning)	Bomb();
-	if (terraExplosion)	TerrainExplosion();
-	if (buildExplosion) BuildExplosion();
+	if (bombExplose)	Destroy();
 
     glutSwapBuffers();
 }

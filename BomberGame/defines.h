@@ -36,6 +36,8 @@
 
 GLfloat shift		= 0.0;
 GLfloat bombShiftY	= 0.0;
+GLfloat bombXCoord	= 0.0;
+GLfloat bombYCoord	= 0.0;
 
 
 const GLfloat PLAIN_NOSE_START_X	= PLAIN_START_X + CORPUS_LENGTH;
@@ -75,5 +77,6 @@ GLushort cameraState = 0;
 GLfloat bombStartX = PLAIN_START_X + CORPUS_LENGTH / 2 + shift;
 
 bool bombRunning = false;
+bool bombExplose = false;
 bool buildExplosion	= false;
 bool terraExplosion = false;
