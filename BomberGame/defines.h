@@ -1,6 +1,7 @@
 #define TERRAIN_LENGTH		100.0
 #define CAMERA_STATES		7
-#define TEXTURES_NUMBER		4
+#define TEXTURES_NUMBER		5
+#define CRASH_SPEED			0.0005
 
 #define BUILD_START_X		3.0
 #define BUILD_START_Y	    0.0
@@ -35,6 +36,7 @@
 
 
 GLfloat shift		= 0.0;
+GLfloat crashShift	= 0.0;	
 GLfloat bombShiftY	= 0.0;
 GLfloat bombXCoord	= 0.0;
 GLfloat bombYCoord	= 0.0;
@@ -78,5 +80,6 @@ GLfloat bombStartX = PLAIN_START_X + CORPUS_LENGTH / 2 + shift;
 
 bool bombRunning = false;
 bool bombExplose = false;
-bool buildExplosion	= false;
+bool buildExplosion = false;
 bool terraExplosion = false;
+bool buildDestroyed = false;

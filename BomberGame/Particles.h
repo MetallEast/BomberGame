@@ -1,9 +1,17 @@
+#pragma once
+
 #include "Common\glut.h"
 #include "Common\GLAux.h"
 
-#define PARTICLE_NUMBER		2000
 
-#pragma once
+#define PARTICLE_NUMBER		2500
+#define TERRA				0
+#define BUILD				1
+#define DUST				2
+#define PARTICLE_SPEED		0.2
+#define SIZE				0.3
+#define DIRECTION_RANGE		50
+
 
 struct Particle
 {
@@ -16,14 +24,21 @@ struct Particle
 
 class Particles
 {
+	GLfloat XCoord;
+	GLfloat XReducer, YReducer, ZReducer;
+	GLfloat speed;
+	GLfloat size;
 	GLushort type;
 	GLuint loop;
 	Particle particles[PARTICLE_NUMBER];
 
-	void Initialize();
+	void Initialize(GLushort type);
 public:
-	void Explosion(GLfloat radius, GLfloat size, GLfloat Xdirection, GLfloat Ydirection, GLfloat Zdirection, GLfloat expXCoord, GLfloat expYCoord);
-	Particles(GLushort);
+	GLfloat YCoord;
+	void GetExpInfo(GLfloat bombXCoord, GLfloat bombYCoord, GLushort typeID);
+	void GetDustInfo(GLfloat buildStartXCoord, GLfloat buildStartYCoord);
+	void Run();
+	Particles(GLushort type);
 	~Particles(void);
 };
 

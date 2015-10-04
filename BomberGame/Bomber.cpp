@@ -7,7 +7,8 @@
 #pragma comment(lib, "GLAux.lib")
 
 
-Particles explosion(0);
+Particles Explosion(0);
+Particles Dust(DUST);
 
 
 void LoadTextures()
@@ -16,6 +17,7 @@ void LoadTextures()
 	AUX_RGBImageRec *textureFloor  = auxDIBImageLoadA("Textures/floor.bmp");
 	AUX_RGBImageRec *textureGrass  = auxDIBImageLoadA("Textures/grass.bmp");
 	AUX_RGBImageRec *textureWindow = auxDIBImageLoadA("Textures/window.bmp");
+	AUX_RGBImageRec *textureRuins  = auxDIBImageLoadA("Textures/ruins.bmp");
 
 	glGenTextures(TEXTURES_NUMBER, &textures[0]);
 
@@ -40,6 +42,11 @@ void LoadTextures()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureWindow->sizeX, textureWindow->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureWindow->data);
+
+	glBindTexture(GL_TEXTURE_2D, textures[4]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureRuins->sizeX, textureRuins->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureRuins->data);
 }
 
 void ChangeSize(int w, int h) 
@@ -247,27 +254,27 @@ void DrawBuilding()
 	glColor3f(0.65, 0.65, 1);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	glBegin(GL_QUAD_STRIP);
-		glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,		BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y,		BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
 	glEnd();
 #pragma endregion
 	
-#pragma region Floor
+#pragma region Roof
 	glColor3f(0.55, 0.65, 0.75);
 	glBindTexture(GL_TEXTURE_2D, textures[1]);
 	glBegin(GL_QUADS);
-		glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH, BUILD_START_Z - BUILD_Z_LENGTH / 2);
-		glTexCoord2f(0.0, 1.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH, BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(1.0, 1.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH, BUILD_START_Z + BUILD_Z_LENGTH / 2);
-		glTexCoord2f(1.0, 0.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH, BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH - crashShift, BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH - crashShift, BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glTexCoord2f(1.0, 1.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH - crashShift, BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH - crashShift, BUILD_START_Z - BUILD_Z_LENGTH / 2);
 	glEnd();
 #pragma endregion
 	
@@ -280,16 +287,16 @@ void DrawBuilding()
 			for(GLfloat Z = BUILD_START_Z - BUILD_Z_LENGTH / 2 + WINDOW_GAP; Z < BUILD_START_Z + BUILD_Z_LENGTH / 2 - WINDOW_SIZE; Z += BUILD_CELL_SIZE)
 			{
 				glBegin(GL_QUAD_STRIP);
-					glTexCoord2f(0, 0);	glVertex3f(X, Y,				Z);
-					glTexCoord2f(1, 0);	glVertex3f(X, Y + WINDOW_SIZE,	Z);
-					glTexCoord2f(0, 1);	glVertex3f(X, Y,				Z + WINDOW_SIZE);
-					glTexCoord2f(1, 1);	glVertex3f(X, Y + WINDOW_SIZE,	Z + WINDOW_SIZE);
-										glVertex3f(X, Y,				Z + WINDOW_SIZE);
-										glVertex3f(X, Y + WINDOW_SIZE,	Z + WINDOW_SIZE);
-										glVertex3f(X, Y,				Z);
-										glVertex3f(X, Y + WINDOW_SIZE,	Z);
-										glVertex3f(X, Y,				Z);
-										glVertex3f(X, Y + WINDOW_SIZE,	Z);
+					glTexCoord2f(0, 0);	glVertex3f(X, Y - crashShift,				Z);
+					glTexCoord2f(1, 0);	glVertex3f(X, Y + WINDOW_SIZE - crashShift,	Z);
+					glTexCoord2f(0, 1);	glVertex3f(X, Y - crashShift,				Z + WINDOW_SIZE);
+					glTexCoord2f(1, 1);	glVertex3f(X, Y + WINDOW_SIZE - crashShift,	Z + WINDOW_SIZE);
+										glVertex3f(X, Y - crashShift,				Z + WINDOW_SIZE);
+										glVertex3f(X, Y + WINDOW_SIZE - crashShift,	Z + WINDOW_SIZE);
+										glVertex3f(X, Y - crashShift,				Z);
+										glVertex3f(X, Y + WINDOW_SIZE - crashShift,	Z);
+										glVertex3f(X, Y - crashShift,				Z);
+										glVertex3f(X, Y + WINDOW_SIZE - crashShift,	Z);
 				glEnd();
 			}
 			Xsides++;
@@ -301,16 +308,16 @@ void DrawBuilding()
 			for(GLfloat X = BUILD_START_X - BUILD_X_LENGTH / 2 + WINDOW_GAP; X < BUILD_START_X + BUILD_X_LENGTH / 2 - WINDOW_SIZE; X += BUILD_CELL_SIZE)
 			{
 				glBegin(GL_QUAD_STRIP);
-					glTexCoord2f(0, 0);	glVertex3f(X,					Y,					Z);
-					glTexCoord2f(1, 0); glVertex3f(X,					Y + WINDOW_SIZE,	Z);
-					glTexCoord2f(0, 1);	glVertex3f(X + WINDOW_SIZE,		Y,					Z);
-					glTexCoord2f(1, 1);	glVertex3f(X + WINDOW_SIZE,		Y + WINDOW_SIZE,	Z);
-										glVertex3f(X + WINDOW_SIZE,		Y,					Z);
-										glVertex3f(X + WINDOW_SIZE,		Y + WINDOW_SIZE,	Z);
-										glVertex3f(X,					Y,					Z);
-										glVertex3f(X,					Y + WINDOW_SIZE,	Z);
-										glVertex3f(X,					Y,					Z);
-										glVertex3f(X,					Y + WINDOW_SIZE,	Z);
+					glTexCoord2f(0, 0);	glVertex3f(X,					Y - crashShift,					Z);
+					glTexCoord2f(1, 0); glVertex3f(X,					Y + WINDOW_SIZE - crashShift,	Z);
+					glTexCoord2f(0, 1);	glVertex3f(X + WINDOW_SIZE,		Y - crashShift,					Z);
+					glTexCoord2f(1, 1);	glVertex3f(X + WINDOW_SIZE,		Y + WINDOW_SIZE - crashShift,	Z);
+										glVertex3f(X + WINDOW_SIZE,		Y - crashShift,					Z);
+										glVertex3f(X + WINDOW_SIZE,		Y + WINDOW_SIZE - crashShift,	Z);
+										glVertex3f(X,					Y - crashShift,					Z);
+										glVertex3f(X,					Y + WINDOW_SIZE - crashShift,	Z);
+										glVertex3f(X,					Y - crashShift,					Z);
+										glVertex3f(X,					Y + WINDOW_SIZE - crashShift,	Z);
 				glEnd();
 			}
 			Zsides++;
@@ -320,6 +327,25 @@ void DrawBuilding()
 	Zsides = 0;
 #pragma endregion
 
+}
+
+void DrawDestroyedBuild()
+{
+	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, textures[4]);
+	glBegin(GL_TRIANGLE_FAN);
+		glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_START_X,							BUILD_START_Y + WINDOW_SIZE, BUILD_START_Z);
+		glTexCoord2f(1.0, 0.0); glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 1.5,	BUILD_START_Y,				-BUILD_Z_LENGTH / 1.5);
+		glTexCoord2f(0.0, 1.0); glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,		BUILD_START_Y,				-BUILD_Z_LENGTH / 2);
+		glTexCoord2f(1.0, 1.0); glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,		BUILD_START_Y,				 BUILD_Z_LENGTH / 2.5);
+	glEnd();
+
+	glBegin(GL_TRIANGLE_FAN);
+		glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_START_X,							BUILD_START_Y + WINDOW_SIZE, BUILD_START_Z);
+		glTexCoord2f(1.0, 0.0); glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,		BUILD_START_Y,				 BUILD_Z_LENGTH / 2.5);
+		glTexCoord2f(0.0, 1.0); glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,		BUILD_START_Y,				 BUILD_Z_LENGTH / 2);
+		glTexCoord2f(1.0, 1.0); glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 1.5,	BUILD_START_Y,				-BUILD_Z_LENGTH / 1.5);
+	glEnd();
 }
 
 void BombState()
@@ -333,8 +359,11 @@ void BombState()
 		bombYCoord < BUILD_START_Z)
 	{
 		bombYCoord > BUILD_START_Z ? buildExplosion = true : terraExplosion = true;
-		bombRunning = false;
 		bombExplose = true;
+		Explosion.GetExpInfo(bombXCoord, bombYCoord, buildExplosion == true ? BUILD : TERRA);
+		if (buildExplosion)
+			Dust.GetDustInfo(BUILD_START_X, BUILD_START_Y);
+		bombRunning = false;
 	}
 }
 
@@ -385,7 +414,20 @@ void Bomb()
 
 void Destroy()
 {
-	explosion.Explosion(0.1, 0.1, 1.0, 1.0, 1.0, bombXCoord, bombYCoord);
+	Explosion.Run();
+	if (buildExplosion)
+	{
+		crashShift += BUILD_Y_LENGTH * CRASH_SPEED;
+		Explosion.YCoord -= CRASH_SPEED * 2;
+		Dust.Run();
+	}
+	if (crashShift > BUILD_Y_LENGTH)
+	{
+		bombExplose = false;
+		Explosion.~Particles();
+		Dust.~Particles();
+		buildDestroyed = true;
+	}
 }
 
 void Camera()
@@ -432,7 +474,7 @@ void RenderScene(void)
 	Camera();
 	DrawTerrain();
 	DrawPlain();
-	DrawBuilding();
+	buildDestroyed ? DrawDestroyedBuild() : DrawBuilding();
 
 	if (bombRunning)	Bomb();
 	if (bombExplose)	Destroy();
