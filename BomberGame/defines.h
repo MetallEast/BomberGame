@@ -1,6 +1,5 @@
 #define TERRAIN_LENGTH		100.0
 #define CAMERA_STATES		7
-#define TEXTURES_NUMBER		5
 #define CRASH_SPEED			0.0005
 
 #define BUILD_START_X		3.0
@@ -21,8 +20,8 @@
 #define TAIL_LENGTH			2.5
 #define CORPUS_LENGTH		2.0
 #define CABINE_LENGTH		1.0
-#define GLASS_HEIGHT		0.05
-#define GLASS_WIDTH_MUL		0.5
+#define GLASS_HEIGHT		0.1
+#define GLASS_WIDTH_MUL		0.1
 #define PEEK_LENGTH			1.0
 #define KEEL_SIZE_X			0.5
 #define KEEL_SIZE_Y			0.8
@@ -34,13 +33,27 @@
 #define BOMB_DIAMETER		0.2
 #define BOMB_PROPORTION		0.75
 
+#define TEX_WALL			0
+#define TEX_ROOF			1
+#define TEX_GRASS			2
+#define TEX_WINDOW			3
+#define TEX_RUINS			4
+#define TEX_STEEL			5
+#define TEX_LIGHT_STEEL		6
+#define TEX_DARK_STEEL		7
+#define TEX_BLACK_STEEL		8
+#define TEX_STEEL_SHELL		9
+#define TEX_GLASS			10
+#define TEXTURES_NUMBER		11
+
+GLuint textures[TEXTURES_NUMBER];
+const GLfloat GRASS_TEX_REPEAT	= TERRAIN_LENGTH / 5.0;
 
 GLfloat shift		= 0.0;
 GLfloat crashShift	= 0.0;	
 GLfloat bombShiftY	= 0.0;
 GLfloat bombXCoord	= 0.0;
 GLfloat bombYCoord	= 0.0;
-
 
 const GLfloat PLAIN_NOSE_START_X	= PLAIN_START_X + CORPUS_LENGTH;
 const GLfloat PLAIN_PEEK_X			= PLAIN_NOSE_START_X + CABINE_LENGTH +  PEEK_LENGTH;
@@ -69,10 +82,6 @@ const GLfloat BUILD_LEFT_XCOORD		= BUILD_START_X - BUILD_X_LENGTH / 2;
 const GLfloat BUILD_RIGHT_XCOORD	= BUILD_START_X + BUILD_X_LENGTH / 2;
 const GLfloat BUILD_HIGH_YCOORD		= BUILD_START_Y + BUILD_Y_LENGTH;
 
-const GLfloat GRASS_TEX_REPEAT		= TERRAIN_LENGTH / 5.0;
-
-
-GLuint textures[TEXTURES_NUMBER];
 GLshort Xsides = 0;
 GLshort Zsides = 0;
 GLushort cameraState = 0;

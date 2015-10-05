@@ -6,9 +6,23 @@
 
 #pragma comment(lib, "GLAux.lib")
 
+typedef GLfloat GLTVector3[3];
+typedef GLfloat GLTVector4[4];
+typedef GLfloat GLTMatrix[16];
 
 Particles Explosion(0);
 Particles Dust(DUST);
+Particles RuinsDust(SMALL_DUST);
+
+// Матрица преобразования, дающая проекцию тени
+GLTMatrix shadowMat;
+
+GLfloat ambientLight[] = {0.3, 0.3, 0.3, 1.0};
+GLfloat diffuseLight[] = {0.7, 0.7, 0.7, 1.0};
+GLfloat specular[] = {1.0, 1.0, 1.0, 1.0};
+GLfloat	lightPos[] = { 50.0f, 100.0f, -50.0f, 0.0f };
+
+GLint nShadow = 0;
 
 
 void LoadTextures()
@@ -18,35 +32,72 @@ void LoadTextures()
 	AUX_RGBImageRec *textureGrass  = auxDIBImageLoadA("Textures/grass.bmp");
 	AUX_RGBImageRec *textureWindow = auxDIBImageLoadA("Textures/window.bmp");
 	AUX_RGBImageRec *textureRuins  = auxDIBImageLoadA("Textures/ruins.bmp");
+	AUX_RGBImageRec *textureSteel  = auxDIBImageLoadA("Textures/steel.bmp");
+	AUX_RGBImageRec *textureLSteel = auxDIBImageLoadA("Textures/lightsteel.bmp");
+	AUX_RGBImageRec *textureDSteel = auxDIBImageLoadA("Textures/darksteel.bmp");
+	AUX_RGBImageRec *textureBSteel = auxDIBImageLoadA("Textures/blacksteel.bmp");
+	AUX_RGBImageRec *textureSShell = auxDIBImageLoadA("Textures/steelshell.bmp");
+	AUX_RGBImageRec *textureGlass  = auxDIBImageLoadA("Textures/glass.bmp");
 
+	glEnable(GL_TEXTURE_2D);
 	glGenTextures(TEXTURES_NUMBER, &textures[0]);
 
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_WALL]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureWall->sizeX, textureWall->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureWall->data);
 
-	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_ROOF]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureFloor->sizeX, textureFloor->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureFloor->data);
 
-	glBindTexture(GL_TEXTURE_2D, textures[2]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_GRASS]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureGrass->sizeX, textureGrass->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureGrass->data);
 
-	glBindTexture(GL_TEXTURE_2D, textures[3]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_WINDOW]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureWindow->sizeX, textureWindow->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureWindow->data);
 
-	glBindTexture(GL_TEXTURE_2D, textures[4]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_RUINS]);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureRuins->sizeX, textureRuins->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureRuins->data);
+
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_STEEL]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureSteel->sizeX, textureSteel->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureSteel->data);
+
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_LIGHT_STEEL]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureLSteel->sizeX, textureLSteel->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureLSteel->data);
+
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_DARK_STEEL]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureDSteel->sizeX, textureDSteel->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureDSteel->data);
+
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_BLACK_STEEL]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureBSteel->sizeX, textureBSteel->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureBSteel->data);
+
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_STEEL_SHELL]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureSShell->sizeX, textureSShell->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureSShell->data);
+
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_GLASS]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureGlass->sizeX, textureGlass->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, textureGlass->data);
 }
 
 void ChangeSize(int w, int h) 
@@ -58,219 +109,239 @@ void ChangeSize(int w, int h)
 	glViewport(0, 0, w, h);
 	gluPerspective(45, ratio, 1, 1000);
 	glMatrixMode(GL_MODELVIEW);
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
 }
 
 void DrawTerrain()
 {
-	glColor3f(0.0, 0.4, 0.0);
-	glBindTexture(GL_TEXTURE_2D, textures[2]);
+	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_GRASS]);
 	glBegin(GL_QUADS);
-		glTexCoord2f(0.0,				0.0);				glVertex3f(-TERRAIN_LENGTH, BUILD_START_Y, -TERRAIN_LENGTH);
-		glTexCoord2f(GRASS_TEX_REPEAT,	0.0);				glVertex3f( TERRAIN_LENGTH, BUILD_START_Y, -TERRAIN_LENGTH);
-		glTexCoord2f(GRASS_TEX_REPEAT,	GRASS_TEX_REPEAT);	glVertex3f( TERRAIN_LENGTH, BUILD_START_Y,  TERRAIN_LENGTH);
-		glTexCoord2f(0.0,				GRASS_TEX_REPEAT);	glVertex3f(-TERRAIN_LENGTH, BUILD_START_Y,  TERRAIN_LENGTH);
+		glNormal3f(0.0, 1.0, 0.0);
+		glTexCoord2f(0.0,				0.0);				glVertex3f(-TERRAIN_LENGTH, BUILD_START_Y - 0.01, -TERRAIN_LENGTH);
+		glTexCoord2f(GRASS_TEX_REPEAT,	0.0);				glVertex3f( TERRAIN_LENGTH, BUILD_START_Y - 0.01, -TERRAIN_LENGTH);
+		glTexCoord2f(GRASS_TEX_REPEAT,	GRASS_TEX_REPEAT);	glVertex3f( TERRAIN_LENGTH, BUILD_START_Y - 0.01,  TERRAIN_LENGTH);
+		glTexCoord2f(0.0,				GRASS_TEX_REPEAT);	glVertex3f(-TERRAIN_LENGTH, BUILD_START_Y - 0.01,  TERRAIN_LENGTH);
 	glEnd();
 }
 
 void DrawPlain()
 {
+	nShadow == 0 ? glColor3f(1.0, 1.0, 1.0) : glColor3f(0.0, 0.0, 0.0);
+
 #pragma region Corpus
-	glColor3f(0.25, 0.75, 1.0);
+//	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_STEEL]);
 	glBegin(GL_QUAD_STRIP);
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
-
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
-
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
-
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
-
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
-
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
-
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
-
-		glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
-		glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
+		glNormal3f(0.0, 1.0, 0.0);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
+		glNormal3f(0.0, 0.5, 0.5);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
+		glNormal3f(0.0, 0.0, 1.0);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
+		glNormal3f(0.0, -0.5, 0.5);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
+		glNormal3f(0.0, -1.0, 0.0);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);	
+		glNormal3f(0.0, -0.5, -0.5);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
+		glNormal3f(0.0, 0.0, -1.0);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
+		glNormal3f(0.0, 0.5, -0.5);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_START_X + CORPUS_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
 	glEnd();
 #pragma endregion
 
 #pragma region Nose
-	glColor3f(0.3, 0.3, 0.35);
+//	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_LIGHT_STEEL]);
 	glBegin(GL_QUAD_STRIP);
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
-
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
-
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);	
-
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);	
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
-
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);		
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);	
-
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);	
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);
-
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);		
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);
-
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
+		glNormal3f(0.0, 0.5, 0.5);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
+		glNormal3f(0.0, 0.0, 1.0);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);	
+		glNormal3f(0.0, -0.5, 0.5);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);	
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
+		glNormal3f(0.0, -1.0, 0.0);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);		
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);	
+		glNormal3f(0.0, -0.5, -0.5);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);	
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);
+		glNormal3f(0.0, 0.0, -1.0);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);		
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);
+		glNormal3f(0.0, 0.5, -0.5);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
 	glEnd();
 
 	glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(PLAIN_PEEK_X + shift,						PLAIN_START_Y,							0);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_PEEK_X + shift,						PLAIN_START_Y,							0);
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 4);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,		PLAIN_DIAMETER / 2);
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y - PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 4,	   -PLAIN_DIAMETER / 2);
 	glEnd();
 #pragma endregion
 
 #pragma region Cabine
 	GLfloat CABINE_GLASS_Y = PLAIN_START_Y + PLAIN_DIAMETER / 2 + GLASS_HEIGHT;	
-	glColor3f(1, 1, 1);
+
+	glEnable(GL_ALPHA_TEST);
+	glEnable(GL_BLEND);
+
+//	glColor4f(1.0, 1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_GLASS]);
 	glBegin(GL_QUADS);
-	glVertex3f(CABINE_GLASS_START_X + shift,						CABINE_GLASS_Y,					PLAIN_DIAMETER / 8);
-	glVertex3f(CABINE_GLASS_START_X + CABINE_GLASS_WIDTH + shift,	CABINE_GLASS_Y,					PLAIN_DIAMETER / 8);
-	glVertex3f(CABINE_GLASS_START_X + CABINE_GLASS_WIDTH + shift,	CABINE_GLASS_Y,				   -PLAIN_DIAMETER / 8);
-	glVertex3f(CABINE_GLASS_START_X + shift,						CABINE_GLASS_Y,				   -PLAIN_DIAMETER / 8);	
+		glTexCoord2f(0.0, 0.0);	glVertex3f(CABINE_GLASS_START_X + shift,						CABINE_GLASS_Y,					PLAIN_DIAMETER / 8);
+		glTexCoord2f(1.0, 0.0);	glVertex3f(CABINE_GLASS_START_X + CABINE_GLASS_WIDTH + shift,	CABINE_GLASS_Y,					PLAIN_DIAMETER / 8);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(CABINE_GLASS_START_X + CABINE_GLASS_WIDTH + shift,	CABINE_GLASS_Y,				   -PLAIN_DIAMETER / 8);
+		glTexCoord2f(1.0, 1.0);	glVertex3f(CABINE_GLASS_START_X + shift,						CABINE_GLASS_Y,				   -PLAIN_DIAMETER / 8);	
 	glEnd();
 
 	glBegin(GL_QUAD_STRIP);
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + shift,					CABINE_GLASS_Y,						   -PLAIN_DIAMETER / 8);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	CABINE_GLASS_Y,						   -PLAIN_DIAMETER / 8);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	CABINE_GLASS_Y,							PLAIN_DIAMETER / 8);
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
-	glVertex3f(PLAIN_NOSE_START_X + shift,					CABINE_GLASS_Y,						   -PLAIN_DIAMETER / 8);
-	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					CABINE_GLASS_Y,						   -PLAIN_DIAMETER / 8);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	CABINE_GLASS_Y,						   -PLAIN_DIAMETER / 8);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
+		glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + CABINE_LENGTH + shift,	CABINE_GLASS_Y,							PLAIN_DIAMETER / 8);
+		glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,		PLAIN_DIAMETER / 4);
+		glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					CABINE_GLASS_Y,						   -PLAIN_DIAMETER / 8);
+		glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_NOSE_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,	   -PLAIN_DIAMETER / 4);
 	glEnd();
+
+	glDisable(GL_BLEND);
+	glDisable(GL_ALPHA_TEST);
 #pragma endregion 
 
 #pragma region Wings
-	glColor3f(0.5, 0.5, 0.5);
+//	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_DARK_STEEL]);
 	// Wing (Left)
 	glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(WING_START_X + shift,					PLAIN_START_Y,						-WING_LENGTH);
-	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						-WING_LENGTH);
-	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 0);
-	glVertex3f(WING_START_X + WING_WIDTH * 0.5 + shift,	PLAIN_START_Y + WING_DEPTH * 0.5,	 0);
-	glVertex3f(WING_START_X + WING_WIDTH * 0.5 + shift,	PLAIN_START_Y - WING_DEPTH * 0.5,	 0);
-	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 0);
-	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						-WING_LENGTH);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(WING_START_X + shift,					PLAIN_START_Y,						-WING_LENGTH);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						-WING_LENGTH);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 0);
+	glTexCoord2f(1.0, 1.0);	glVertex3f(WING_START_X + WING_WIDTH * 0.5 + shift,	PLAIN_START_Y + WING_DEPTH * 0.5,	 0);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(WING_START_X + WING_WIDTH * 0.5 + shift,	PLAIN_START_Y - WING_DEPTH * 0.5,	 0);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 0);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						-WING_LENGTH);
 	glEnd();
 
 	// Wing (Right)
 	glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(WING_START_X + shift,					PLAIN_START_Y,						 WING_LENGTH);
-	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 WING_LENGTH);
-	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 0);
-	glVertex3f(WING_START_X + WING_WIDTH * 0.5 + shift,	PLAIN_START_Y + WING_DEPTH * 0.5,	 0);
-	glVertex3f(WING_START_X + WING_WIDTH * 0.5 + shift,	PLAIN_START_Y - WING_DEPTH * 0.5,	 0);
-	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 0);
-	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 WING_LENGTH);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(WING_START_X + shift,					PLAIN_START_Y,						 WING_LENGTH);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 WING_LENGTH);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 0);
+	glTexCoord2f(1.0, 1.0);	glVertex3f(WING_START_X + WING_WIDTH * 0.5 + shift,	PLAIN_START_Y + WING_DEPTH * 0.5,	 0);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(WING_START_X + WING_WIDTH * 0.5 + shift,	PLAIN_START_Y - WING_DEPTH * 0.5,	 0);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 0);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(WING_START_X - WING_WIDTH * 0.5 + shift, PLAIN_START_Y,						 WING_LENGTH);
 	glEnd();
 #pragma endregion
 
 #pragma region Tail
 	// Main part
-	glColor3f(1, 0.5, 0.5);
+//	glColor3f(1.0, 1.0, 1.0);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_DARK_STEEL]);
 	glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(PLAIN_START_X - TAIL_LENGTH + shift,		PLAIN_START_Y + PLAIN_DIAMETER / 4,	  0);
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);	
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);	
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);	
-	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
+	glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_START_X - TAIL_LENGTH + shift,		PLAIN_START_Y + PLAIN_DIAMETER / 4,	  0);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);	
+	glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
+	glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);	
+	glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,   PLAIN_DIAMETER / 2);		
+	glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,   PLAIN_DIAMETER / 4);		
+	glTexCoord2f(0.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
+	glTexCoord2f(1.0, 1.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y + PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);		
+	glTexCoord2f(0.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 4,  -PLAIN_DIAMETER / 2);	
+	glTexCoord2f(1.0, 0.0);	glVertex3f(PLAIN_START_X + shift,					PLAIN_START_Y - PLAIN_DIAMETER / 2,  -PLAIN_DIAMETER / 4);		
 	glEnd();
 
 	// Keel
-	glColor3f(1, 0.8, 0.75);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_BLACK_STEEL]);
 	glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(KEEL_START_X + shift,						KEEL_START_Y,	 0);
-	glVertex3f(KEEL_START_X - KEEL_SIZE_X * 0.5 + shift,	KEEL_START_Y,	 0);
-	glVertex3f(KEEL_START_X - KEEL_SIZE_X * 0.5 + shift,	KEEL_LINE,		 0);
-	glVertex3f(KEEL_START_X + KEEL_SIZE_X * 0.5 + shift,	KEEL_LINE,		-KEEL_SIZE_Z / 2);
-	glVertex3f(KEEL_START_X + KEEL_SIZE_X * 0.5 + shift,	KEEL_LINE,		 KEEL_SIZE_Z / 2);
-	glVertex3f(KEEL_START_X - KEEL_SIZE_X * 0.5 + shift,	KEEL_LINE,		 0);
-	glVertex3f(KEEL_START_X - KEEL_SIZE_X * 0.5 + shift,	KEEL_START_Y,	 0);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(KEEL_START_X + shift,						KEEL_START_Y,	 0);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(KEEL_START_X - KEEL_SIZE_X * 0.5 + shift,	KEEL_START_Y,	 0);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(KEEL_START_X - KEEL_SIZE_X * 0.5 + shift,	KEEL_LINE,		 0);
+	glTexCoord2f(1.0, 1.0);	glVertex3f(KEEL_START_X + KEEL_SIZE_X * 0.5 + shift,	KEEL_LINE,		-KEEL_SIZE_Z / 2);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(KEEL_START_X + KEEL_SIZE_X * 0.5 + shift,	KEEL_LINE,		 KEEL_SIZE_Z / 2);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(KEEL_START_X - KEEL_SIZE_X * 0.5 + shift,	KEEL_LINE,		 0);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(KEEL_START_X - KEEL_SIZE_X * 0.5 + shift,	KEEL_START_Y,	 0);
 	glEnd();
 
 	// Stabilizator (Left)
 	glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(KEEL_START_X + shift,								KEEL_LINE,								-STABILIZATOR_SIZE_Z);
-	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE,								-STABILIZATOR_SIZE_Z);
-	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X + shift,			KEEL_LINE,								 0);
-	glVertex3f(KEEL_START_X + STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE + STABILIZATOR_SIZE_Y * 0.5,	 0);
-	glVertex3f(KEEL_START_X + STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE - STABILIZATOR_SIZE_Y * 0.5,	 0);
-	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X + shift,			KEEL_LINE,								 0);
-	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE,								-STABILIZATOR_SIZE_Z);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(KEEL_START_X + shift,								KEEL_LINE,								-STABILIZATOR_SIZE_Z);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE,								-STABILIZATOR_SIZE_Z);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X + shift,			KEEL_LINE,								 0);
+	glTexCoord2f(1.0, 1.0);	glVertex3f(KEEL_START_X + STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE + STABILIZATOR_SIZE_Y * 0.5,	 0);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(KEEL_START_X + STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE - STABILIZATOR_SIZE_Y * 0.5,	 0);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X + shift,			KEEL_LINE,								 0);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE,								-STABILIZATOR_SIZE_Z);
 	glEnd();
 	// Stabilizator (Right)
 	glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(KEEL_START_X + shift,								KEEL_LINE,								 STABILIZATOR_SIZE_Z);
-	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE,								 STABILIZATOR_SIZE_Z);
-	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X + shift,			KEEL_LINE,								 0);
-	glVertex3f(KEEL_START_X + STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE + STABILIZATOR_SIZE_Y * 0.5,	 0);
-	glVertex3f(KEEL_START_X + STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE - STABILIZATOR_SIZE_Y * 0.5,	 0);
-	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X + shift,			KEEL_LINE,								 0);
-	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE,								 STABILIZATOR_SIZE_Z);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(KEEL_START_X + shift,								KEEL_LINE,								 STABILIZATOR_SIZE_Z);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE,								 STABILIZATOR_SIZE_Z);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X + shift,			KEEL_LINE,								 0);
+	glTexCoord2f(1.0, 1.0);	glVertex3f(KEEL_START_X + STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE + STABILIZATOR_SIZE_Y * 0.5,	 0);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(KEEL_START_X + STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE - STABILIZATOR_SIZE_Y * 0.5,	 0);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X + shift,			KEEL_LINE,								 0);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(KEEL_START_X - STABILIZATOR_SIZE_X * 0.5 + shift,	KEEL_LINE,								 STABILIZATOR_SIZE_Z);
 	glEnd();
 #pragma endregion 
 
-	shift += PLAIN_SPEED;
 }
 
 void DrawBuilding()
 {
+	nShadow == 0 ? glColor3f(1.0, 1.0, 1.0) : glColor3f(0.0, 0.0, 0.0);
 
 #pragma region Walls
-	glColor3f(0.65, 0.65, 1);
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_WALL]);
 	glBegin(GL_QUAD_STRIP);
-	glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
-	glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
-	glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z + BUILD_Z_LENGTH / 2);
-	glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
-	glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z + BUILD_Z_LENGTH / 2);
-	glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
-	glTexCoord2f(0.0, 2.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
-	glTexCoord2f(2.0, 2.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
-	glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y - crashShift,		BUILD_START_Z - BUILD_Z_LENGTH / 2);
-	glTexCoord2f(2.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glNormal3f(-1.0, 0.0, 0.0);
+	glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,					BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,					BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glTexCoord2f(1.0, 1.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glNormal3f(0.0, 0.0, 1.0);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y,					BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z + BUILD_Z_LENGTH / 2);
+	glNormal3f(1.0, 0.0, 0.0);
+	glTexCoord2f(0.0, 1.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_START_Y,					BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(1.0, 1.0);	glVertex3f(BUILD_RIGHT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glNormal3f(0.0, 0.0, -1.0);
+	glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_START_Y,					BUILD_START_Z - BUILD_Z_LENGTH / 2);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
 	glEnd();
 #pragma endregion
 	
 #pragma region Roof
-	glColor3f(0.55, 0.65, 0.75);
-	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_ROOF]);
 	glBegin(GL_QUADS);
+	glNormal3f(0.0, 1.0, 0.0);
 	glTexCoord2f(0.0, 0.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH - crashShift, BUILD_START_Z - BUILD_Z_LENGTH / 2);
 	glTexCoord2f(0.0, 1.0);	glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH - crashShift, BUILD_START_Z + BUILD_Z_LENGTH / 2);
 	glTexCoord2f(1.0, 1.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH - crashShift, BUILD_START_Z + BUILD_Z_LENGTH / 2);
@@ -279,13 +350,13 @@ void DrawBuilding()
 #pragma endregion
 	
 #pragma region Windows
-	glColor3f(1, 1, 1);
-	glBindTexture(GL_TEXTURE_2D, textures[3]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_WINDOW]);
 	for(GLfloat X = BUILD_START_X - BUILD_X_LENGTH / 2 - WINDOW_LIP; Xsides < 2; X += BUILD_X_LENGTH + WINDOW_LIP * 2)
 	{
-		for(GLfloat Y = BUILD_START_Y + WINDOW_GAP; Y < BUILD_START_Y + BUILD_Y_LENGTH - WINDOW_GAP; Y += BUILD_CELL_SIZE)
+		for(GLfloat Y = BUILD_START_Y + WINDOW_GAP + crashShift; Y < BUILD_START_Y + BUILD_Y_LENGTH - WINDOW_GAP * 5; Y += BUILD_CELL_SIZE)
 			for(GLfloat Z = BUILD_START_Z - BUILD_Z_LENGTH / 2 + WINDOW_GAP; Z < BUILD_START_Z + BUILD_Z_LENGTH / 2 - WINDOW_SIZE; Z += BUILD_CELL_SIZE)
 			{
+				Xsides == 0 ? glNormal3f(-1.0, 0.0, 0.0) : glNormal3f(1.0, 0.0, 0.0);
 				glBegin(GL_QUAD_STRIP);
 					glTexCoord2f(0, 0);	glVertex3f(X, Y - crashShift,				Z);
 					glTexCoord2f(1, 0);	glVertex3f(X, Y + WINDOW_SIZE - crashShift,	Z);
@@ -304,9 +375,10 @@ void DrawBuilding()
 
 	for(GLfloat Z = BUILD_START_Z - BUILD_Z_LENGTH / 2 - WINDOW_LIP; Zsides < 2; Z += BUILD_Z_LENGTH + WINDOW_LIP * 2)
 	{
-		for(GLfloat Y = BUILD_START_Y + WINDOW_GAP; Y < BUILD_START_Y + BUILD_Y_LENGTH - WINDOW_GAP; Y += BUILD_CELL_SIZE)
+		for(GLfloat Y = BUILD_START_Y + WINDOW_GAP + crashShift; Y < BUILD_START_Y + BUILD_Y_LENGTH - WINDOW_GAP * 5; Y += BUILD_CELL_SIZE)
 			for(GLfloat X = BUILD_START_X - BUILD_X_LENGTH / 2 + WINDOW_GAP; X < BUILD_START_X + BUILD_X_LENGTH / 2 - WINDOW_SIZE; X += BUILD_CELL_SIZE)
 			{
+				Zsides == 0 ? glNormal3f(0.0, 0.0, -1.0) : glNormal3f(0.0, 0.0, 1.0);
 				glBegin(GL_QUAD_STRIP);
 					glTexCoord2f(0, 0);	glVertex3f(X,					Y - crashShift,					Z);
 					glTexCoord2f(1, 0); glVertex3f(X,					Y + WINDOW_SIZE - crashShift,	Z);
@@ -332,7 +404,7 @@ void DrawBuilding()
 void DrawDestroyedBuild()
 {
 	glColor3f(1.0, 1.0, 1.0);
-	glBindTexture(GL_TEXTURE_2D, textures[4]);
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_RUINS]);
 	glBegin(GL_TRIANGLE_FAN);
 		glTexCoord2f(0.0, 0.0); glVertex3f(BUILD_START_X,							BUILD_START_Y + WINDOW_SIZE, BUILD_START_Z);
 		glTexCoord2f(1.0, 0.0); glVertex3f(BUILD_START_X - BUILD_X_LENGTH / 1.5,	BUILD_START_Y,				-BUILD_Z_LENGTH / 1.5);
@@ -362,49 +434,53 @@ void BombState()
 		bombExplose = true;
 		Explosion.GetExpInfo(bombXCoord, bombYCoord, buildExplosion == true ? BUILD : TERRA);
 		if (buildExplosion)
+		{
 			Dust.GetDustInfo(BUILD_START_X, BUILD_START_Y);
+			RuinsDust.GetDustInfo(BUILD_START_X, BUILD_START_Y);
+		}
 		bombRunning = false;
 	}
 }
 
 void Bomb()
 {
-#pragma region Corpus
 	glColor3f(1.0, 1.0, 1.0);
+#pragma region Corpus
+	glBindTexture(GL_TEXTURE_2D, textures[TEX_STEEL_SHELL]);
 	glBegin(GL_QUAD_STRIP);
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
-		glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);	
+	glTexCoord2f(0.0, 0.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+	glTexCoord2f(1.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+	glTexCoord2f(0.0, 1.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
+	glTexCoord2f(1.0, 1.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
+	glTexCoord2f(0.0, 0.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
+	glTexCoord2f(1.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
+	glTexCoord2f(0.0, 1.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
+	glTexCoord2f(1.0, 1.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);		
+	glTexCoord2f(0.0, 0.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
+	glTexCoord2f(1.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);		
+	glTexCoord2f(0.0, 1.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+	glTexCoord2f(1.0, 1.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+	glTexCoord2f(0.0, 0.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
+	glTexCoord2f(1.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
+	glTexCoord2f(0.0, 1.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
+	glTexCoord2f(1.0, 1.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);		
+	glTexCoord2f(0.0, 0.0);	glVertex3f(bombStartX + shift,						PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+	glTexCoord2f(1.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);	
 	glEnd();
 #pragma endregion
 
 #pragma region Nose
 	glBegin(GL_TRIANGLE_FAN);
-		glVertex3f(bombStartX + BOMB_LENGTH + shift,	PLAIN_START_Y - bombShiftY,  0);
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);			
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);			
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);			
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);			
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);			
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);			
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);			
-		glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);	
+	glTexCoord2f(0.0, 0.0);	glVertex3f(bombStartX + BOMB_LENGTH + shift,	PLAIN_START_Y - bombShiftY,  0);
+	glTexCoord2f(1.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);		
+	glTexCoord2f(0.0, 1.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);			
+	glTexCoord2f(1.0, 1.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);			
+	glTexCoord2f(0.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,   BOMB_DIAMETER / 2);			
+	glTexCoord2f(1.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,   BOMB_DIAMETER / 4);			
+	glTexCoord2f(0.0, 1.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);			
+	glTexCoord2f(1.0, 1.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y + BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);			
+	glTexCoord2f(0.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 4 - bombShiftY,  -BOMB_DIAMETER / 2);			
+	glTexCoord2f(1.0, 0.0);	glVertex3f(bombStartX + BOMB_CORPUS_LENGTH + shift,	PLAIN_START_Y - BOMB_DIAMETER / 2 - bombShiftY,  -BOMB_DIAMETER / 4);	
 	glEnd();
 #pragma endregion
 
@@ -420,13 +496,13 @@ void Destroy()
 		crashShift += BUILD_Y_LENGTH * CRASH_SPEED;
 		Explosion.YCoord -= CRASH_SPEED * 2;
 		Dust.Run();
-	}
-	if (crashShift > BUILD_Y_LENGTH)
-	{
-		bombExplose = false;
-		Explosion.~Particles();
-		Dust.~Particles();
-		buildDestroyed = true;
+		if (crashShift > BUILD_Y_LENGTH)
+		{
+			bombExplose = false;
+			Explosion.~Particles();
+			Dust.~Particles();
+			buildDestroyed = true;
+		}
 	}
 }
 
@@ -466,6 +542,127 @@ void Camera()
 	}
 }
 
+
+
+
+
+GLfloat gltGetVectorLength(GLTVector3 vNormal)
+{
+	return sqrt(vNormal[1] * vNormal[1] + vNormal[2] * vNormal[2] + vNormal[3] * vNormal[3]);
+}
+
+void gltScaleVector(GLTVector3 vVector, const GLfloat fScale)
+{ 
+  vVector[0] *= fScale; vVector[1] *= fScale; vVector[2] *= fScale; 
+}
+
+void gltNormalizeVector(GLTVector3 vNormal)
+{ 
+  GLfloat fLength = 1.0f / gltGetVectorLength(vNormal);
+  gltScaleVector(vNormal, fLength); 
+}
+
+void gltSubtractVectors(const GLTVector3 vFirst, const GLTVector3 vSecond, GLTVector3 vResult) 
+{
+  vResult[0] = vFirst[0] - vSecond[0];
+  vResult[1] = vFirst[1] - vSecond[1];
+  vResult[2] = vFirst[2] - vSecond[2];
+}
+
+void gltVectorCrossProduct(const GLTVector3 vU, const GLTVector3 vV, GLTVector3 vResult)
+{
+  vResult[0] = vU[1]*vV[2] - vV[1]*vU[2];
+  vResult[1] = -vU[0]*vV[2] + vV[0]*vU[2];
+  vResult[2] = vU[0]*vV[1] - vV[0]*vU[1];
+}
+
+void gltGetNormalVector(const GLTVector3 vP1, const GLTVector3 vP2, const GLTVector3 vP3, GLTVector3 vNormal)
+{
+   GLTVector3 vV1, vV2;
+  
+  gltSubtractVectors(vP2, vP1, vV1);
+  gltSubtractVectors(vP3, vP1, vV2);
+  
+  gltVectorCrossProduct(vV1, vV2, vNormal);
+  gltNormalizeVector(vNormal);
+}
+
+void gltGetPlaneEquation(GLTVector3 vPoint1, GLTVector3 vPoint2, GLTVector3 vPoint3, GLTVector3 vPlane)
+{
+  // Вычислить вектор нормали
+  gltGetNormalVector(vPoint1, vPoint2, vPoint3, vPlane);
+  
+  vPlane[3] = -(vPlane[0] * vPoint3[0] + vPlane[1] * vPoint3[1] + vPlane[2] * vPoint3[2]);
+}
+
+void gltMakeShadowMatrix_(GLTVector3 vPoints[3], GLTVector4 vLightPos, GLTMatrix destMat)
+{
+  GLTVector4 vPlaneEquation;
+  GLfloat dot;
+  
+  gltGetPlaneEquation(vPoints[0], vPoints[1], vPoints[2], vPlaneEquation);
+  
+  // Вычисляет скалярное произведение направляющего вектора плоскости
+  // и вектора положения источника света
+  dot =  vPlaneEquation[0]*vLightPos[0] + 
+      vPlaneEquation[1]*vLightPos[1] + 
+      vPlaneEquation[2]*vLightPos[2] + 
+      vPlaneEquation[3]*vLightPos[3];
+  
+  // Формируем матрицу проекции
+  // Первый столбец
+  destMat[0] = dot - vLightPos[0] * vPlaneEquation[0];
+  destMat[4] = 0.0f - vLightPos[0] * vPlaneEquation[1];
+  destMat[8] = 0.0f - vLightPos[0] * vPlaneEquation[2];
+  destMat[12] = 0.0f - vLightPos[0] * vPlaneEquation[3];
+  
+  // Второй столбец
+  destMat[1] = 0.0f - vLightPos[1] * vPlaneEquation[0];
+  destMat[5] = dot - vLightPos[1] * vPlaneEquation[1];
+  destMat[9] = 0.0f - vLightPos[1] * vPlaneEquation[2];
+  destMat[13] = 0.0f - vLightPos[1] * vPlaneEquation[3];
+  
+  // Третий столбец
+  destMat[2] = 0.0f - vLightPos[2] * vPlaneEquation[0];
+  destMat[6] = 0.0f - vLightPos[2] * vPlaneEquation[1];
+  destMat[10] = dot - vLightPos[2] * vPlaneEquation[2];
+  destMat[14] = 0.0f - vLightPos[2] * vPlaneEquation[3];
+  
+  // Четвертый столбец
+  destMat[3] = 0.0f - vLightPos[3] * vPlaneEquation[0];
+  destMat[7] = 0.0f - vLightPos[3] * vPlaneEquation[1];
+  destMat[11] = 0.0f - vLightPos[3] * vPlaneEquation[2];
+  destMat[15] = dot - vLightPos[3] * vPlaneEquation[3];
+}
+
+
+
+
+  
+
+
+void InitLighting()
+{
+	GLTVector3 points[3] = {{-1.0,  BUILD_START_Y, -1.0},
+							{-1.0,  BUILD_START_Y,  1.0},
+							{ 1.0,  BUILD_START_Y,  1.0}};
+
+	glEnable(GL_DEPTH_TEST);
+	glFrontFace(GL_CCW);
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+	glEnable(GL_LIGHT0);
+
+	glEnable(GL_COLOR_MATERIAL);
+	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+	glClearColor(0.0, 0.0, 1.0, 1.0);
+	
+	gltMakeShadowMatrix_(points, lightPos, shadowMat);
+}
+
 void RenderScene(void) 
 { 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -473,9 +670,44 @@ void RenderScene(void)
 
 	Camera();
 	DrawTerrain();
-	DrawPlain();
-	buildDestroyed ? DrawDestroyedBuild() : DrawBuilding();
+	
 
+	glPushMatrix();
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+	nShadow = 0;
+	DrawPlain();
+	if (!buildDestroyed) 
+		DrawBuilding();
+	glPopMatrix();
+
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
+	glPushMatrix();
+
+	glMultMatrixf((GLfloat *)shadowMat);
+	shift += PLAIN_SPEED;
+	
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	
+	nShadow = 1;
+	DrawPlain();
+	if (!buildDestroyed) 
+		DrawBuilding();
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(lightPos[0], lightPos[1], lightPos[2]);
+	glColor3f(1.0, 1.0, 0);
+	glutSolidSphere(5.0, 10.0, 10.0);
+	glPopMatrix();
+
+
+	if (buildDestroyed)
+	{
+		DrawDestroyedBuild();
+		RuinsDust.Run();
+	}
 	if (bombRunning)	Bomb();
 	if (bombExplose)	Destroy();
 
@@ -500,18 +732,18 @@ int main(int argc, char* argv[])
 {
 	glutInit(&argc, argv);
 	glutInitWindowSize(800, 600);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+	glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutCreateWindow("Bomber");
 	glutFullScreen();
-
-	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_TEXTURE_2D);
-	LoadTextures();
 
 	glutDisplayFunc(RenderScene);
 	glutReshapeFunc(ChangeSize);
 	glutIdleFunc(RenderScene);
 	glutKeyboardFunc(Keys);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	
+
+	LoadTextures();
+	InitLighting();
 
 	glutMainLoop();
 	return 0;

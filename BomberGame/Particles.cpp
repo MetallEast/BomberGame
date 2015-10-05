@@ -13,7 +13,9 @@ Particles::~Particles(void)
 void Particles::Initialize(GLushort type)
 {
 	speed = PARTICLE_SPEED;
-	size  = type != DUST ? 	SIZE : SIZE * 5.0;
+	if (type == DUST) size = SIZE * 5.0;
+	else if (type == SMALL_DUST) size = SIZE / 2.0;
+	else size = SIZE;
 
 	for (loop = 0; loop < PARTICLE_NUMBER; loop++)
 	{
@@ -28,7 +30,7 @@ void Particles::Initialize(GLushort type)
 		particles[loop].dirY = 0.0;
 		particles[loop].dirZ = 0.0;
 
-		if (type != DUST)
+		if (type < DUST)
 		{
 			particles[loop].r = 1.0;
 			if (loop % 2 == 0) particles[loop].g = 0.65;

@@ -4,10 +4,11 @@
 #include "Common\GLAux.h"
 
 
-#define PARTICLE_NUMBER		2500
+#define PARTICLE_NUMBER		1000
 #define TERRA				0
 #define BUILD				1
 #define DUST				2
+#define SMALL_DUST			3
 #define PARTICLE_SPEED		0.2
 #define SIZE				0.3
 #define DIRECTION_RANGE		50
@@ -31,7 +32,7 @@ class Particles
 	GLushort type;
 	GLuint loop;
 	Particle particles[PARTICLE_NUMBER];
-
+private:
 	void Initialize(GLushort type);
 public:
 	GLfloat YCoord;
