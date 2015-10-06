@@ -3,26 +3,15 @@
 #include "Common\GLAux.h"
 #include "defines.h"
 #include "Particles.h"
+#include "Lighting.h"
 
 #pragma comment(lib, "GLAux.lib")
 
-typedef GLfloat GLTVector3[3];
-typedef GLfloat GLTVector4[4];
-typedef GLfloat GLTMatrix[16];
 
 Particles Explosion(0);
 Particles Dust(DUST);
 Particles RuinsDust(SMALL_DUST);
-
-// Матрица преобразования, дающая проекцию тени
-GLTMatrix shadowMat;
-
-GLfloat ambientLight[] = {0.3, 0.3, 0.3, 1.0};
-GLfloat diffuseLight[] = {0.7, 0.7, 0.7, 1.0};
-GLfloat specular[] = {1.0, 1.0, 1.0, 1.0};
-GLfloat	lightPos[] = { 50.0f, 100.0f, -50.0f, 0.0f };
-
-GLint nShadow = 0;
+Lighting Light;
 
 
 void LoadTextures()
@@ -109,7 +98,7 @@ void ChangeSize(int w, int h)
 	glViewport(0, 0, w, h);
 	gluPerspective(45, ratio, 1, 1000);
 	glMatrixMode(GL_MODELVIEW);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+	glLightfv(GL_LIGHT0, GL_POSITION, Light.lightPos);
 }
 
 void DrawTerrain()
@@ -127,7 +116,7 @@ void DrawTerrain()
 
 void DrawPlain()
 {
-	nShadow == 0 ? glColor3f(1.0, 1.0, 1.0) : glColor3f(0.0, 0.0, 0.0);
+	Light.nShadow == 0 ? glColor3f(1.0, 1.0, 1.0) : glColor3f(0.0, 0.0, 0.0);
 
 #pragma region Corpus
 //	glColor3f(1.0, 1.0, 1.0);
@@ -316,8 +305,7 @@ void DrawPlain()
 
 void DrawBuilding()
 {
-	nShadow == 0 ? glColor3f(1.0, 1.0, 1.0) : glColor3f(0.0, 0.0, 0.0);
-
+	Light.nShadow == 0 ? glColor3f(1.0, 1.0, 1.0) : glColor3f(0.0, 0.0, 0.0);
 #pragma region Walls
 	glBindTexture(GL_TEXTURE_2D, textures[TEX_WALL]);
 	glBegin(GL_QUAD_STRIP);
@@ -337,7 +325,7 @@ void DrawBuilding()
 	glTexCoord2f(1.0, 0.0);	glVertex3f(BUILD_LEFT_XCOORD,	BUILD_HIGH_YCOORD - crashShift,	BUILD_START_Z - BUILD_Z_LENGTH / 2);
 	glEnd();
 #pragma endregion
-	
+
 #pragma region Roof
 	glBindTexture(GL_TEXTURE_2D, textures[TEX_ROOF]);
 	glBegin(GL_QUADS);
@@ -348,7 +336,7 @@ void DrawBuilding()
 	glTexCoord2f(1.0, 0.0);	glVertex3f(BUILD_START_X + BUILD_X_LENGTH / 2,	BUILD_START_Y +  BUILD_Y_LENGTH - crashShift, BUILD_START_Z - BUILD_Z_LENGTH / 2);
 	glEnd();
 #pragma endregion
-	
+
 #pragma region Windows
 	glBindTexture(GL_TEXTURE_2D, textures[TEX_WINDOW]);
 	for(GLfloat X = BUILD_START_X - BUILD_X_LENGTH / 2 - WINDOW_LIP; Xsides < 2; X += BUILD_X_LENGTH + WINDOW_LIP * 2)
@@ -510,157 +498,28 @@ void Camera()
 {
 	switch(cameraState)
 	{
-	case 0:	gluLookAt(20.0, 20.0, 0.0,		
-					  0.0,  0.0,  0.0,
-					  0.0,  1.0,  0.0);
-			break;
-	case 1:	gluLookAt(-20.0,  20.0, 0.0,		
+	case 0:	gluLookAt(-20.0,  20.0, 0.0,		
 					   0.0,  0.0,   0.0,
 					   0.0,  1.0,   0.0);
 			break;
-	case 2:	gluLookAt(0.0,  20.0, 20.0,		
+	case 1:	gluLookAt(0.0,  20.0, 20.0,		
 					  0.0,  0.0,  0.0,
 					  0.0,  1.0,  0.0);
 			break;
-	case 3:	gluLookAt(0.0,  20.0, -20.0,		
+	case 2:	gluLookAt(0.0,  20.0, -20.0,		
 					  0.0,  0.0,  0.0,
 					  0.0,  1.0,  0.0);
 			break;
-	case 4:	gluLookAt(10.0,  30.0, 5.0,		
+	case 3:	gluLookAt(10.0,  30.0, 5.0,		
 					  0.0,   0.0,  0.0,
 					  0.0,   1.0,  0.0);
 			break;
-	case 5:	gluLookAt(50.0,  30.0, 0.0,		
-					  0.0,   0.0,  0.0,
-					  0.0,   1.0,  0.0);
-			break;
-	case 6:	gluLookAt(PLAIN_START_X - 5.0,  PLAIN_START_Y + 3.0, 0.0,		
-					  0.0,					0.0,				 0.0,
-					  0.0,					1.0,				 0.0);
+	case 4: gluLookAt(-50.0, 30.0, 0.0,
+					   0.0,  0.0,  0.0,
+					   0.0,  1.0,  0.0);
 			break;
 	default: break;
 	}
-}
-
-
-
-
-
-GLfloat gltGetVectorLength(GLTVector3 vNormal)
-{
-	return sqrt(vNormal[1] * vNormal[1] + vNormal[2] * vNormal[2] + vNormal[3] * vNormal[3]);
-}
-
-void gltScaleVector(GLTVector3 vVector, const GLfloat fScale)
-{ 
-  vVector[0] *= fScale; vVector[1] *= fScale; vVector[2] *= fScale; 
-}
-
-void gltNormalizeVector(GLTVector3 vNormal)
-{ 
-  GLfloat fLength = 1.0f / gltGetVectorLength(vNormal);
-  gltScaleVector(vNormal, fLength); 
-}
-
-void gltSubtractVectors(const GLTVector3 vFirst, const GLTVector3 vSecond, GLTVector3 vResult) 
-{
-  vResult[0] = vFirst[0] - vSecond[0];
-  vResult[1] = vFirst[1] - vSecond[1];
-  vResult[2] = vFirst[2] - vSecond[2];
-}
-
-void gltVectorCrossProduct(const GLTVector3 vU, const GLTVector3 vV, GLTVector3 vResult)
-{
-  vResult[0] = vU[1]*vV[2] - vV[1]*vU[2];
-  vResult[1] = -vU[0]*vV[2] + vV[0]*vU[2];
-  vResult[2] = vU[0]*vV[1] - vV[0]*vU[1];
-}
-
-void gltGetNormalVector(const GLTVector3 vP1, const GLTVector3 vP2, const GLTVector3 vP3, GLTVector3 vNormal)
-{
-   GLTVector3 vV1, vV2;
-  
-  gltSubtractVectors(vP2, vP1, vV1);
-  gltSubtractVectors(vP3, vP1, vV2);
-  
-  gltVectorCrossProduct(vV1, vV2, vNormal);
-  gltNormalizeVector(vNormal);
-}
-
-void gltGetPlaneEquation(GLTVector3 vPoint1, GLTVector3 vPoint2, GLTVector3 vPoint3, GLTVector3 vPlane)
-{
-  // Вычислить вектор нормали
-  gltGetNormalVector(vPoint1, vPoint2, vPoint3, vPlane);
-  
-  vPlane[3] = -(vPlane[0] * vPoint3[0] + vPlane[1] * vPoint3[1] + vPlane[2] * vPoint3[2]);
-}
-
-void gltMakeShadowMatrix_(GLTVector3 vPoints[3], GLTVector4 vLightPos, GLTMatrix destMat)
-{
-  GLTVector4 vPlaneEquation;
-  GLfloat dot;
-  
-  gltGetPlaneEquation(vPoints[0], vPoints[1], vPoints[2], vPlaneEquation);
-  
-  // Вычисляет скалярное произведение направляющего вектора плоскости
-  // и вектора положения источника света
-  dot =  vPlaneEquation[0]*vLightPos[0] + 
-      vPlaneEquation[1]*vLightPos[1] + 
-      vPlaneEquation[2]*vLightPos[2] + 
-      vPlaneEquation[3]*vLightPos[3];
-  
-  // Формируем матрицу проекции
-  // Первый столбец
-  destMat[0] = dot - vLightPos[0] * vPlaneEquation[0];
-  destMat[4] = 0.0f - vLightPos[0] * vPlaneEquation[1];
-  destMat[8] = 0.0f - vLightPos[0] * vPlaneEquation[2];
-  destMat[12] = 0.0f - vLightPos[0] * vPlaneEquation[3];
-  
-  // Второй столбец
-  destMat[1] = 0.0f - vLightPos[1] * vPlaneEquation[0];
-  destMat[5] = dot - vLightPos[1] * vPlaneEquation[1];
-  destMat[9] = 0.0f - vLightPos[1] * vPlaneEquation[2];
-  destMat[13] = 0.0f - vLightPos[1] * vPlaneEquation[3];
-  
-  // Третий столбец
-  destMat[2] = 0.0f - vLightPos[2] * vPlaneEquation[0];
-  destMat[6] = 0.0f - vLightPos[2] * vPlaneEquation[1];
-  destMat[10] = dot - vLightPos[2] * vPlaneEquation[2];
-  destMat[14] = 0.0f - vLightPos[2] * vPlaneEquation[3];
-  
-  // Четвертый столбец
-  destMat[3] = 0.0f - vLightPos[3] * vPlaneEquation[0];
-  destMat[7] = 0.0f - vLightPos[3] * vPlaneEquation[1];
-  destMat[11] = 0.0f - vLightPos[3] * vPlaneEquation[2];
-  destMat[15] = dot - vLightPos[3] * vPlaneEquation[3];
-}
-
-
-
-
-  
-
-
-void InitLighting()
-{
-	GLTVector3 points[3] = {{-1.0,  BUILD_START_Y, -1.0},
-							{-1.0,  BUILD_START_Y,  1.0},
-							{ 1.0,  BUILD_START_Y,  1.0}};
-
-	glEnable(GL_DEPTH_TEST);
-	glFrontFace(GL_CCW);
-
-	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-	glEnable(GL_LIGHT0);
-
-	glEnable(GL_COLOR_MATERIAL);
-	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-	glClearColor(0.0, 0.0, 1.0, 1.0);
-	
-	gltMakeShadowMatrix_(points, lightPos, shadowMat);
 }
 
 void RenderScene(void) 
@@ -671,10 +530,9 @@ void RenderScene(void)
 	Camera();
 	DrawTerrain();
 	
-
 	glPushMatrix();
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
-	nShadow = 0;
+	glLightfv(GL_LIGHT0, GL_POSITION, Light.lightPos);
+	Light.nShadow = 0;
 	DrawPlain();
 	if (!buildDestroyed) 
 		DrawBuilding();
@@ -682,22 +540,22 @@ void RenderScene(void)
 
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
-	glPushMatrix();
 
-	glMultMatrixf((GLfloat *)shadowMat);
+	glPushMatrix();
+	glMultMatrixf((GLfloat *)Light.shadowMat);
 	shift += PLAIN_SPEED;
 	
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	
-	nShadow = 1;
+	Light.nShadow = 1;
 	DrawPlain();
 	if (!buildDestroyed) 
 		DrawBuilding();
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(lightPos[0], lightPos[1], lightPos[2]);
+	glTranslatef(Light.lightPos[0], Light.lightPos[1], Light.lightPos[2]);
 	glColor3f(1.0, 1.0, 0);
 	glutSolidSphere(5.0, 10.0, 10.0);
 	glPopMatrix();
@@ -743,7 +601,7 @@ int main(int argc, char* argv[])
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);	
 
 	LoadTextures();
-	InitLighting();
+	Light.Init(BUILD_START_Y);
 
 	glutMainLoop();
 	return 0;

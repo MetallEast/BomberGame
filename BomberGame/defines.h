@@ -1,5 +1,5 @@
 #define TERRAIN_LENGTH		100.0
-#define CAMERA_STATES		7
+#define CAMERA_STATES		5
 #define CRASH_SPEED			0.0005
 
 #define BUILD_START_X		3.0
