@@ -1,3 +1,7 @@
+/*
+	"GLtools.h" library clone
+*/
+
 #pragma once
 
 #include <math.h>
